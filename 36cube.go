@@ -40,7 +40,7 @@ func main() {
 			break
 		}
 
-		position = evaluate_square(position)
+		position = evaluate_cube(position)
 
 		if len(freetowers) == 0 {
 			printBoard()
@@ -48,46 +48,40 @@ func main() {
 	}
 }
 
-func evaluate_square(p Position) Position {
-	// in use
-	if board[p.row][p.column].inUse {
-		//is already purple
-		if board[p.row][p.column].color == Color(5) {
-			board[p.row][p.column].inUse = false
-			freetowers = append(freetowers, board[p.row][p.column])
-			return backPosition(p)
-		} else { // not yet purple
-			// search for available tower
-			for i := int(board[p.row][p.column].color) + 1; i < 6; i++ {
-				// if found available tower
-				if index := findAvailableTower(Tower{6 - board_height[p.row][p.column], Color(i), false}); index > -1 && colorIsFree(p, Color(i)) {
-					oldTower := board[p.row][p.column]
-					board[p.row][p.column] = Tower{6 - board_height[p.row][p.column], Color(i), true}
-					freetowers[index] = freetowers[len(freetowers)-1]
-					freetowers = freetowers[:len(freetowers)-1]
-					freetowers = append(freetowers, oldTower)
-					return advancePosition(p)
-				}
-			}
-			// if no available tower found
-			board[p.row][p.column].inUse = false
-			freetowers = append(freetowers, board[p.row][p.column])
-			return backPosition(p)
-		}
-	} else { // square not in use
+func evaluate_cube(p Position) Position {
 
-		for i := 0; i < 6; i++ {
-			// if found available tower
-			if index := findAvailableTower(Tower{6 - board_height[p.row][p.column], Color(i), false}); index > -1 && colorIsFree(p, Color(i)) {
-				board[p.row][p.column] = Tower{6 - board_height[p.row][p.column], Color(i), true}
-				freetowers[index] = freetowers[len(freetowers)-1]
-				freetowers = freetowers[:len(freetowers)-1]
-				return advancePosition(p)
-			}
-		}
-		// if no available tower found
+	//is already purple
+	if board[p.row][p.column].inUse && board[p.row][p.column].color == Color(5) {
+		board[p.row][p.column].inUse = false
+		freetowers = append(freetowers, board[p.row][p.column])
 		return backPosition(p)
 	}
+
+	i := 0
+	if board[p.row][p.column].inUse {
+		i = int(board[p.row][p.column].color) + 1
+	}
+	// search for available tower
+	for ; i < 6; i++ {
+		// if found available tower
+		if index := findAvailableTower(Tower{6 - board_height[p.row][p.column], Color(i), false}); index > -1 && colorIsFree(p, Color(i)) {
+
+			if board[p.row][p.column].inUse {
+				freetowers = append(freetowers, board[p.row][p.column])
+			}
+			board[p.row][p.column] = Tower{6 - board_height[p.row][p.column], Color(i), true}
+			freetowers[index] = freetowers[len(freetowers)-1]
+			freetowers = freetowers[:len(freetowers)-1]
+			return advancePosition(p)
+		}
+	}
+	// if no available tower found
+	if board[p.row][p.column].inUse {
+		board[p.row][p.column].inUse = false
+		freetowers = append(freetowers, board[p.row][p.column])
+	}
+
+	return backPosition(p)
 }
 
 func printBoard() {
